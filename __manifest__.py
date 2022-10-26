@@ -1,4 +1,7 @@
 {
     'name':'estate',
-    'application': True
+    'application': True,
+    'data':[
+        'ir.model.access.csv'
+    ]
 }
