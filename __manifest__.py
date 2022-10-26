@@ -2,6 +2,6 @@
     'name':'estate',
     'application': True,
     'data':[
-        'ir.model.access.csv'
+        './security/ir.model.access.csv'
     ]
 }
