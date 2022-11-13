@@ -28,4 +28,7 @@ class estate_property(models.Model):
                 ('Sold', 'Sold'),\
                     ('Canceled', 'Canceled')], default = 'New')
     active = fields.Boolean(default = True)
+    type = fields.Many2one('estate.property.type')
+    user_id = fields.Many2one('res.users', index = True, string = 'Salesperson', default = lambda self: self.env.user)
+    partner_id = fields.Many2one('res.partner', string = 'Partner', required = True, copy = False)
 

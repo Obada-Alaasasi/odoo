@@ -5,5 +5,5 @@ class estate_property_type(models.Model):
     _description= "property type"
 
     #define model fields (columns in the SQL table)
-    type= fields.Char(required = True)
-    description = fields.Text()
+    name= fields.Char(required = True)
+    # description = fields.Text()

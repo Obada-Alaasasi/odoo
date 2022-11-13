@@ -13,6 +13,7 @@
         <field name="arch" type="xml">
             <tree string="channel">
                 <field name="name"/>
+                <field name="type"/>
                 <field name="description"/>
                 <field name="postcode"/>
                 <field name="date_availability"/>
@@ -43,8 +44,9 @@
                             <field name="display_name"/>
                         </h1>
                     </div>
-                    <group col="4">
+                    <group col="4" colspan="1">
                         <field name="name"/>
+                        <field name="type"/>
                         <field name="postcode"/>
                         <field name="expected_price"/>                        
                         <field name="date_availability"/>
@@ -63,6 +65,12 @@
                                 <field name="garden_orientation"/>
                                 <field name="state"/>
                                 <field name="active"/>
+                            </group>
+                        </page>
+                        <page string="Other info">
+                            <group col="2">
+                                <field name="user_id"/>
+                                <field name="partner_id"/>
                             </group>
                         </page>
                     </notebook>
