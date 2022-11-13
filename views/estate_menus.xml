@@ -18,6 +18,10 @@
                 id="estate_type_menu"
                 name="Property Type"
                 action="property_type_action"/>
+            <menuitem   
+                id="estate_tag_menu"
+                name="Property Tags"
+                action="property_tag_action"/>
         </menuitem> 
     </menuitem>
 </odoo>
