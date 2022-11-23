@@ -34,12 +34,16 @@
         </field>
     </record>
 
-    <!-- create the form vire for estate properties according to ir.ui.view -->
+    <!-- create the form view for estate properties according to ir.ui.view -->
     <record id="estate_property_view_form" model="ir.ui.view">
         <field name="name">estate.property.form</field>
         <field name="model">estate.property</field>
         <field name="arch" type="xml">
             <form string="channel">
+                <header>
+                    <button name="property_sold" type="object" string="SOLD"/>
+                    <button name="property_cancelled" type="object" string="CANCEL"/>
+                </header>
                 <sheet>
                     <div class="oe_title">
                         <h1>
@@ -52,6 +56,7 @@
                     <group col="1">
                         <field name="name"/>
                         <field name="type"/>
+                        <field name="state"/>
                         <field name="postcode"/>
                         <field name="expected_price"/>                        
                         <field name="date_availability"/>

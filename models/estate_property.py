@@ -1,4 +1,5 @@
 from odoo import fields, models, api
+from odoo.exceptions import UserError
 from datetime import datetime, timedelta
 from dateutil.relativedelta import *
 
@@ -17,18 +18,18 @@ class estate_property(models.Model):
     best_offer = fields.Float(compute = "_best_offer")
     selling_price = fields.Float(readonly = True, copy =False)
     bedrooms = fields.Integer(default = 2)
-    living_area = fields.Integer()
+    living_area = fields.Integer(string = "Living area (sqm)")
     facades = fields.Integer()
     garage = fields.Boolean()
     garden = fields.Boolean()
-    garden_area = fields.Integer()
+    garden_area = fields.Integer(string = "Garden area (sqm)")
     total_area = fields.Float(compute = "_total_area")
     garden_orientation = fields.Selection(selection = [('North', 'North'), ('South', 'South'), ('East', 'East'), ('West', 'West')])
     state = fields.Selection(required = True, copy = False, selection=[('New', 'New'),\
         ('Offer Received', 'Offer Received'),\
             ('Offer Accepted', 'Offer Accepted'),\
                 ('Sold', 'Sold'),\
-                    ('Canceled', 'Canceled')], default = 'New')
+                    ('Cancelled', 'Cancelled')], default = 'New')
     active = fields.Boolean(default = True)
     type = fields.Many2one('estate.property.type')
     user_id = fields.Many2one('res.users', index = True, string = 'Salesperson', default = lambda self: self.env.user)
@@ -36,15 +37,53 @@ class estate_property(models.Model):
     tag_ids = fields.Many2many('estate.property.tag', string = 'tags')
     offer_ids = fields.One2many('estate.property.offer', inverse_name = 'property_id')
     
+    #computed field: total_area; add living and garden areas
     @api.depends("living_area", "garden_area")
     def _total_area(self):
         for record in self:
                 record.total_area = record.living_area + record.garden_area
 
+    #computed field: best_offer; compare offers and choose max price
     @api.depends("offer_ids.price")
     def _best_offer(self):
         for record in self:
-            record.best_offer = max(record.offer_ids.mapped('price'))
+            if len(record.offer_ids.mapped('price')) > 0:
+                record.best_offer = max(record.offer_ids.mapped('price'))
+            else: record.best_offer = 0
+
+    #onchange function; change garden area and orientation values when garden changes
+    @api.onchange('garden')
+    def _onchange_garden(self):
+        if self.garden == True:
+            self.garden_area = 10
+            self.garden_orientation = 'North'
+        else:
+            self.garden_area = 0
+            self.garden_orientation = ''
+
+    
+    #SOLD BUTTON: set the property state as SOLD
+    def property_sold(self):
+        for record in self:
+            if record.state != 'Cancelled':
+                record.state = 'Sold'
+            else: #return an error message 
+                raise UserError("This property is cancelled!")
+        return True
+
+    #CANCEL BUTTON: set the property state as CANCELlED
+    def property_cancelled(self):
+        for record in self:
+            record.state = "Cancelled"
+        return True
+
+    
+    
+
+    
+
+    
+
 
             
 
