@@ -74,7 +74,10 @@ class estate_property(models.Model):
     #CANCEL BUTTON: set the property state as CANCELlED
     def property_cancelled(self):
         for record in self:
-            record.state = "Cancelled"
+            if record.state != "Sold":
+                record.state = "Cancelled"
+            else: #return an error message 
+                raise UserError("This property is already sold!")
         return True
 
     
