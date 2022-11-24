@@ -27,16 +27,15 @@ class estate_property_offer(models.Model):
             record.validity = date_diff.days + 1
 
     #ACCEPT BUTTON: accept a given offer
-    def accept_offer(self):
-        if 'Accepted' not in [record.status for record in self.env['estate.property.offer'].search([])]: #if no offer is accepted
-            
-            #accept offer, and set selling price and buyer
-            for record in self:
+    def accept_offer(self):            
+        #accept offer, and set selling price and buyer
+        for record in self:
+            if 'Accepted' not in [entry.status for entry in self.env['estate.property.offer'].search([('property_id', '=', '{}'.format(record.id))])]: #if no offer is accepted
                 record.status = "Accepted"
                 record.property_id.selling_price = record.price
                 record.property_id.partner_id = record.partner_id
-        else:
-            raise UserError("Another offer was already accepted!")
+            else:
+                raise UserError("Another offer was already accepted!")
         return True
 
     #REFUSE BUTTON: refuse a given offer
