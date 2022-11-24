@@ -1,5 +1,5 @@
 from odoo import fields, models, api
-from odoo.exceptions import UserError
+from odoo.exceptions import UserError, ValidationError
 from datetime import datetime, timedelta
 from dateutil.relativedelta import *
 
@@ -83,7 +83,15 @@ class estate_property(models.Model):
             else: #return an error message 
                 raise UserError("This property is already sold!")
         return True
-
+    
+    #SELLING_PRICE CONSTRAINT
+    @api.constrains('selling_price')
+    def _check_selling_price(self):
+        for record in self:
+            if 'Accepted' not in [entry.status for entry in self.env['estate.property.offer'].search([('property_id', '=', '{}'.format(record.id))])]:
+                if record.selling_price < (0.9 * record.expected_price):
+                    raise ValidationError("Selling price cannot be lower than 90% of the expected price.")
+            
     #TEST BUTTON
     def test(self):
         raise UserError("{}".format([record.status for record in self.env['estate.property.offer'].search([])]))
