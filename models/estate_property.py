@@ -38,7 +38,7 @@ class estate_property(models.Model):
     offer_ids = fields.One2many('estate.property.offer', inverse_name = 'property_id')
     
     #computed field: total_area; add living and garden areas
-    @api.depends("living_area", "garden_area")
+    @api.depends("living_area", "garden_area") 
     def _total_area(self):
         for record in self:
                 record.total_area = record.living_area + record.garden_area
@@ -79,6 +79,10 @@ class estate_property(models.Model):
             else: #return an error message 
                 raise UserError("This property is already sold!")
         return True
+
+    #TEST BUTTON
+    def test(self):
+        raise UserError("{}".format([record.status for record in self.env['estate.property.offer'].search([])]))
 
     
     

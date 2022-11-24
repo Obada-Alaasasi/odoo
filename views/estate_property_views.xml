@@ -43,6 +43,7 @@
                 <header>
                     <button name="property_sold" type="object" string="SOLD"/>
                     <button name="property_cancelled" type="object" string="CANCEL"/>
+                    <button name="test" type="object" string="TEST"/>
                 </header>
                 <sheet>
                     <div class="oe_title">
