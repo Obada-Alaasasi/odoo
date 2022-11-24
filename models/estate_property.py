@@ -8,6 +8,10 @@ class estate_property(models.Model):
     #define table info
     _name = "estate.property"
     _description = "features of listed estate properties"
+    _sql_constraints = [
+        ('selling_price_positive', 'CHECK(selling_price >= 0)', 'Selling price must be strictly positive!'),
+        ('expected_price_positive', 'CHECK(expected_price >= 0)', 'Expected price must be strictly positive!')
+    ]
 
     #define table columns
     name = fields.Char(required = True)
