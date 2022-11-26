@@ -12,9 +12,10 @@ class estate_property(models.Model):
         ('selling_price_positive', 'CHECK(selling_price >= 0)', 'Selling price must be strictly positive!'),
         ('expected_price_positive', 'CHECK(expected_price >= 0)', 'Expected price must be strictly positive!')
     ]
+    _order = "id desc"
 
     #define table columns
-    name = fields.Char(required = True)
+    name = fields.Char(string="title", required = True)
     description = fields.Text()
     postcode = fields.Char()
     date_availability = fields.Date(copy = False, string = "Available from",  default = (datetime.now() + relativedelta(months =+ 3)).strftime("%Y-%m-%d") )
@@ -40,6 +41,7 @@ class estate_property(models.Model):
     partner_id = fields.Many2one('res.partner', string = 'Partner', required = True, copy = False)
     tag_ids = fields.Many2many('estate.property.tag', string = 'tags')
     offer_ids = fields.One2many('estate.property.offer', inverse_name = 'property_id')
+    properties_per_type = fields.Many2one('estate.property.type')
     
     #computed field: total_area; add living and garden areas
     @api.depends("living_area", "garden_area") 
@@ -65,6 +67,14 @@ class estate_property(models.Model):
             self.garden_area = 0
             self.garden_orientation = ''
 
+    #onchange function: change property state to offer recieved upon recieving an offer
+    @api.onchange('offer_ids')
+    def offer_received(self):
+        for record in self:
+            if len(record.offer_ids.mapped('price')) > 0:
+                record.state = 'Offer Received'
+            else:
+                record.state = 'New'
     
     #SOLD BUTTON: set the property state as SOLD
     def property_sold(self):
@@ -88,13 +98,13 @@ class estate_property(models.Model):
     @api.constrains('selling_price')
     def _check_selling_price(self):
         for record in self:
-            if 'Accepted' not in [entry.status for entry in self.env['estate.property.offer'].search([('property_id', '=', '{}'.format(record.id))])]:
+            if 'Accepted' not in [entry.state for entry in self.env['estate.property.offer'].search([('property_id', '=', '{}'.format(record.id))])]:
                 if record.selling_price < (0.9 * record.expected_price):
                     raise ValidationError("Selling price cannot be lower than 90% of the expected price.")
             
     #TEST BUTTON
     def test(self):
-        raise UserError("{}".format([record.status for record in self.env['estate.property.offer'].search([])]))
+        raise UserError("")
 
     
     

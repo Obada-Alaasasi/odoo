@@ -6,13 +6,14 @@ from dateutil.relativedelta import *
 class estate_property_offer(models.Model):
     _name = "estate.property.offer"
     _description = "estate property offer"
+    _order = "price desc"
 
     price = fields.Float()
     partner_id = fields.Many2one('res.partner', required = True, string = "Partner")
     property_id = fields.Many2one('estate.property', required = True)
     validity = fields.Integer(default = 7, string = "validity (days)")
     date_deadline = fields.Date(string = "Deadline", compute = "_set_date", inverse = "_set_validity") #values are not stored in db unless attr "store=True"
-    status = fields.Selection(selection = [("Accepted", "Accepted"), ("Refused", "Refused")],copy = False)
+    state = fields.Selection(selection = [("Accepted", "Accepted"), ("Refused", "Refused")], readonly = True, copy = False)
     
     #use validity to change the deadline before saving the record
     @api.depends("validity")
@@ -30,10 +31,11 @@ class estate_property_offer(models.Model):
     def accept_offer(self):            
         #accept offer, and set selling price and buyer
         for record in self:
-            if 'Accepted' not in [entry.status for entry in self.env['estate.property.offer'].search([('property_id', '=', '{}'.format(record.id))])]: #if no offer is accepted
-                record.status = "Accepted"
+            if 'Accepted' not in [entry.state for entry in self.env['estate.property.offer'].search([('property_id', '=', '{}'.format(record.id))])]: #if no offer is accepted
+                record.state = "Accepted"
                 record.property_id.selling_price = record.price
                 record.property_id.partner_id = record.partner_id
+                record.property_id.state = 'Offer Accepted'
             else:
                 raise UserError("Another offer was already accepted!")
         return True
@@ -41,7 +43,7 @@ class estate_property_offer(models.Model):
     #REFUSE BUTTON: refuse a given offer
     def refuse_offer(self):
         for record in self:
-            record.status = "Refused"
+            record.state = "Refused"
         return True
             
             
