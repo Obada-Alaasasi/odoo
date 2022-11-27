@@ -48,14 +48,18 @@
                     <group col = "1" colspan = "1">
                         <field name="tag_ids" widget="many2many_tags" options="{'color_field':'color'}" nolabel = "1"/>
                     </group>
-                    <group col= "2">
-                        <field name="name"/>
-                        <field name="type" options = "{'no_create' : True}"/>
-                        <field name="postcode"/>
-                        <field name="expected_price"/>                        
-                        <field name="date_availability"/>
-                        <field name="selling_price"/>
-                        <field name="best_offer"/>
+                    <group name="top"> <!-- nested groups for side-by-side view of fields-->
+                        <group name="col1">
+                            <field name="name"/>
+                            <field name="type" options = "{'no_create' : True}"/>
+                            <field name="postcode"/>
+                            <field name="expected_price"/>                        
+                        </group>
+                        <group name="col2">
+                            <field name="date_availability"/>
+                            <field name="selling_price"/>
+                            <field name="best_offer"/>
+                        </group>
                     </group>
                     <notebook>
                         <page string = "Description">
