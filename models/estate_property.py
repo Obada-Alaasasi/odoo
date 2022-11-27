@@ -102,6 +102,21 @@ class estate_property(models.Model):
                 if record.selling_price < (0.9 * record.expected_price):
                     raise ValidationError("Selling price cannot be lower than 90% of the expected price.")
             
+
+    #prevent deletion of shown for sale properties by modifying core model functions
+    #issue: cannot delete either ways because of the foreign key constraint of estate_property_offer referencing estate_property 
+    @api.ondelete(at_uninstall = False)
+    def _unlink_except_for_sale(self):
+        for record in self:
+            if record.state != 'New' or record.state != 'Cancelled':
+                raise UserError('Cannot delete for-sale properties!')
+    
+                
+
+
+
+
+
     #TEST BUTTON
     def test(self):
         raise UserError("")
