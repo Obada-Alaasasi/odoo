@@ -14,7 +14,8 @@ class estate_property_offer(models.Model):
     validity = fields.Integer(default = 7, string = "validity (days)")
     date_deadline = fields.Date(string = "Deadline", compute = "_set_date", inverse = "_set_validity") #values are not stored in db unless attr "store=True"
     state = fields.Selection(selection = [("Accepted", "Accepted"), ("Refused", "Refused")], readonly = True, copy = False)
-    
+    property_type_id = fields.Many2one(related = 'property_id.type', store = True)
+
     #use validity to change the deadline before saving the record
     @api.depends("validity")
     def _set_date(self):

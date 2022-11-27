@@ -1,4 +1,11 @@
 <odoo>
+    <record id="property_offer_action" model = "ir.actions.act_window">
+        <field name="name">property_offer_action</field>
+        <field name="res_model">estate.property.offer</field>
+        <field name="view_mode">tree</field>
+        <field name="domain">[('property_type_id', '=', active_id)]</field> <!-- filter offers based on the type of the calling record from the type recordset-->
+    </record>
+    
     <record id = "property_offer_tree" model = "ir.ui.view">
         <field name="name">property_offer_tree</field>
         <field name="model">estate.property.offer</field>

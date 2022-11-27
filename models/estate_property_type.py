@@ -12,3 +12,4 @@ class estate_property_type(models.Model):
     name= fields.Char(string = "Title", required = True)
     property_ids = fields.One2many('estate.property', inverse_name='properties_per_type')
     sequence = fields.Integer(string="Sequence") #used to order elements by dragging
+    offer_ids = fields.One2many('estate.property.offer', inverse_name="property_id")
