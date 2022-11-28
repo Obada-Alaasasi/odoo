@@ -36,7 +36,7 @@
                 <header>
                     <button name="property_sold" type="object" string="SOLD" states="Offer Accepted"/> <!-- 'states' attr is used to define at what stage the button is enabled/visible-->
                     <button name="property_cancelled" type="object" string="CANCEL"/>
-                    <button name="test" type="object" string="TEST" invisible = "1"/>
+                    <button name="test" type="object" string="TEST" invisible = "0"/>
                     <field name="state" widget="statusbar"/>
                 </header>
                 <sheet>

@@ -38,7 +38,7 @@ class estate_property(models.Model):
     active = fields.Boolean(default = True)
     type = fields.Many2one('estate.property.type')
     user_id = fields.Many2one('res.users', index = True, string = 'Salesperson', default = lambda self: self.env.user)
-    partner_id = fields.Many2one('res.partner', string = 'Partner', required = True, copy = False)
+    partner_id = fields.Many2one('res.partner', string = 'Partner', required = False, copy = False)
     tag_ids = fields.Many2many('estate.property.tag', string = 'tags')
     offer_ids = fields.One2many('estate.property.offer', inverse_name = 'property_id')
     properties_per_type = fields.Many2one('estate.property.type')
@@ -69,12 +69,12 @@ class estate_property(models.Model):
 
     #onchange function: change property state to offer recieved upon recieving an offer
     @api.onchange('offer_ids')
-    def offer_received(self):
+    def state_update(self):
         for record in self:
-            if len(record.offer_ids.mapped('price')) > 0:
-                record.state = 'Offer Received'
-            else:
+            if len(record.offer_ids.mapped('price')) == 0:
                 record.state = 'New'
+        #NOTE: looping here is not necessary since the caller (self) would be one record in this case but is a better practise
+        #NOTE: the state is updated to "Offer Received" by the modified create() in estate.property.offer 
     
     #SOLD BUTTON: set the property state as SOLD
     def property_sold(self):
@@ -110,16 +110,10 @@ class estate_property(models.Model):
         for record in self:
             if record.state != 'New' or record.state != 'Cancelled':
                 raise UserError('Cannot delete for-sale properties!')
-    
-                
-
-
-
-
 
     #TEST BUTTON
     def test(self):
-        raise UserError("")
+        raise UserError("{}".format(self.env['estate.property'].browse([1])[0].best_offer))
 
     
     

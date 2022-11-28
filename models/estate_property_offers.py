@@ -10,7 +10,11 @@ class estate_property_offer(models.Model):
 
     price = fields.Float()
     partner_id = fields.Many2one('res.partner', required = True, string = "Partner")
-    property_id = fields.Many2one('estate.property', required = True)
+    '''NOTE: 
+    set foreign key constraint as ON DELETE CASCADE rather than RESTRICT to allow delete offer records 
+    after deleting the corresponding property record
+    '''
+    property_id = fields.Many2one('estate.property', required = True ,ondelete = 'cascade')   
     validity = fields.Integer(default = 7, string = "validity (days)")
     date_deadline = fields.Date(string = "Deadline", compute = "_set_date", inverse = "_set_validity") #values are not stored in db unless attr "store=True"
     state = fields.Selection(selection = [("Accepted", "Accepted"), ("Refused", "Refused")], readonly = True, copy = False)
@@ -46,5 +50,21 @@ class estate_property_offer(models.Model):
             record.state = "Refused"
         return True
             
+    #change property state after first offer, a new offer can only be higher than existing offer
+    @api.model
+    def create(self, vars):
+        #find the property the offer is referring to thru property_id (NOTE: browse returns a recordset)
+        property = self.env['estate.property'].browse(vars['property_id'])[0]
+        if vars['price'] <= property.best_offer:
+            raise UserError('Sorry, placed offer has to be higher than {}'.format(property.best_offer))
+        else:
+            if len(property.offer_ids.mapped('price')) == 0:
+                property.state = 'Offer Received'
+                return super().create(vars)
+        #NOTE: added business logic will take effect, but will return the parent's
+        #NOTE: keep in mind that a record is only created after reload so, the excpetion will only appear upon reload
+        
+
+        
             
             
