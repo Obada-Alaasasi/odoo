@@ -115,6 +115,7 @@ class estate_property(models.Model):
     def test(self):
         raise UserError("{}".format(self.env['estate.property'].browse([1])[0].best_offer))
 
+
     
     
 
