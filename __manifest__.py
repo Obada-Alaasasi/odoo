@@ -1,4 +1,6 @@
 {
     'name':'estate_account',
-    'application':True
+    'application':True,
+    'installable':True,
+    'depends':['base']
 }
