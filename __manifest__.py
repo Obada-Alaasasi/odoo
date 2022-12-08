@@ -5,8 +5,8 @@
     'depends':['base'],
     'category':'Real Estate/Brokerage',
     'data':[
+        './security/estate_security.xml',
         './security/ir.model.access.csv',
-        './security/security.xml',
         './views/estate_property_views.xml',
         './views/property_type_views.xml',
         './views/property_tag_views.xml',
