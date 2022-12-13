@@ -13,11 +13,13 @@
         </menuitem>
         <menuitem
             id="estate_Settings_menu"
-            name="Settings">
+            name="Settings"
+            groups="group_estate_manager">
             <menuitem
                 id="estate_type_menu"
                 name="Property Type"
                 action="property_type_action"/>
+                
             <menuitem   
                 id="estate_tag_menu"
                 name="Property Tags"
