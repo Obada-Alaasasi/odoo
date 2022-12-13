@@ -42,6 +42,7 @@ class estate_property(models.Model):
     tag_ids = fields.Many2many('estate.property.tag', string = 'tags')
     offer_ids = fields.One2many('estate.property.offer', inverse_name = 'property_id')
     properties_per_type = fields.Many2one('estate.property.type')
+    company_id = fields.Many2one('res.company' , required=True , default=lambda self:self.env.user.company_id)
     
     #computed field: total_area; add living and garden areas
     @api.depends("living_area", "garden_area") 

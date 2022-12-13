@@ -5,8 +5,8 @@
         <field name='category_id' ref ='base.module_category_real_estate_brokerage'></field>
     </record>
 
+    <!-- GROUP: managers -->
     <!-- NOTE:
-        -GROUP: manager
         -implied_ids: 'inherit' permissions of other group/s
         -arg of eval attr has to be a list to allow for multiple groups
     -->
@@ -23,8 +23,8 @@
         -perm_read = False means that the rule does not apply to read() operation
         -permissions are set to false by default - check ir_rule_no_access_rights constraint
     -->
-    <record id='privacy_property_rule' model='ir.rule'>
-        <field name='name'>rule</field>
+    <record id='user_property_access' model='ir.rule'>
+        <field name='name'>user.property.access</field>
         <field name='model_id' ref ='model_estate_property'/>
         <field name='groups' eval="[Command.link(ref('group_estate_user'))]"/>
         <field name='perm_read' eval='False'/>
@@ -33,6 +33,22 @@
         <field name='perm_unlink' eval='True'/>
         <field name='global' eval='0'/>
         <field name='domain_force'>['|', ('user_id','=', user.id), ('user_id','=', False)]</field>
+    </record>
+
+    <!-- NOTE:  
+        - RECORD RULE: users and managers cannot access or read properties of other companies
+        - in the case of managers members of multiple companies, the 'default company' is what matters it seems!
+    -->
+    <record id='company_property_access' model='ir.rule'>
+        <field name='name'>company.property.access</field>
+        <field name='model_id' ref='model_estate_property'/>
+        <field name='groups' eval="[Command.link(ref('group_estate_user')), Command.link(ref('group_estate_manager'))]"/>
+        <field name='perm_read' eval='True'/>
+        <field name='perm_create' eval='True'/>
+        <field name='perm_write' eval='True'/>
+        <field name='perm_unlink' eval='True'/>
+        <field name='global' eval='1'/>
+        <field name='domain_force'>[('company_id', '=', user.company_id.id)]</field>
     </record>
 
 </odoo>

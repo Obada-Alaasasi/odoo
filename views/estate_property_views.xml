@@ -104,6 +104,7 @@
                             <group col="2">
                                 <field name="user_id"/>
                                 <field name="partner_id"/>
+                                <field name="company_id"/>
                             </group>
                         </page>
                     </notebook>
