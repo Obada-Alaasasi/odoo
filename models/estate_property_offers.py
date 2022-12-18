@@ -60,7 +60,7 @@ class estate_property_offer(models.Model):
         else:
             if len(property.offer_ids.mapped('price')) == 0:
                 property.state = 'Offer Received'
-                return super().create(vars)
+            return super().create(vars)
         #NOTE: added business logic will take effect, but will return the parent's
         #NOTE: keep in mind that a record is only created after reload so, the excpetion will only appear upon reload
         
