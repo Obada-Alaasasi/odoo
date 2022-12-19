@@ -14,6 +14,7 @@
         './views/estate_menus.xml',
         './views/res_users_inherited_view.xml',
         './data/estate.property.type.csv',
-        './demo/demo.xml'
+        './demo/demo.xml',
+        './demo/demo_offer.xml'
     ]
 }

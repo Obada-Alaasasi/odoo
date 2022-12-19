@@ -1,31 +1,67 @@
 <odoo>
-    <record id="property_1" model="estate.property">
-        <field name="name">Big Villa</field>
-        <field name="state">New</field>
-        <field name="description">A nice and big Villa</field>
-        <field name="postcode">12345</field>
-        <field name="date_availability">2020-02-02</field>
-        <field name="expected_price">1600000</field>
-        <field name="bedrooms">6</field>
-        <field name="living_area">100</field>
-        <field name="facades">4</field>
-        <field name="garage">True</field>
-        <field name="garden">True</field>
-        <field name="garden_area">100000</field>
-        <field name="garden_orientation">South</field>
-    </record>
+    <data noupdate="0">
+        <!-- property_1 record: Big Villa -->
+        <record id="property_1" model="estate.property">
+            <field name="name">Big Villa</field>
+            <field name="type" ref="type_0"/>
+            <field name="state">New</field>
+            <field name="description">A nice and big Villa</field>
+            <field name="postcode">12345</field>
+            <field name="date_availability">2020-02-02</field>
+            <field name="expected_price">1600000</field>
+            <field name="bedrooms">6</field>
+            <field name="living_area">100</field>
+            <field name="facades">4</field>
+            <field name="garage">True</field>
+            <field name="garden">True</field>
+            <field name="garden_area">100000</field>
+            <field name="garden_orientation">South</field>
+        </record>
 
-    <record id="property_2" model="estate.property">
-        <field name="name">Trailer home</field>
-        <field name="state">Cancelled</field>
-        <field name="description">Home in a trailer park</field>
-        <field name="postcode">54321</field>
-        <field name="date_availability">1970-01-01</field>
-        <field name="expected_price">100000</field>
-        <field name="selling_price">120000</field>
-        <field name="bedrooms">1</field>
-        <field name="living_area">10</field>
-        <field name="facades">4</field>
-        <field name="garage">False</field>
-    </record>
+        <!-- property_2 record: Trailer home -->
+        <record id="property_2" model="estate.property">
+            <field name="name">Trailer home</field>
+            <field name="type" ref="type_0"/>
+            <field name="state">Cancelled</field>
+            <field name="description">Home in a trailer park</field>
+            <field name="postcode">54321</field>
+            <field name="date_availability">1970-01-01</field>
+            <field name="expected_price">100000</field>
+            <field name="selling_price">120000</field>
+            <field name="bedrooms">1</field>
+            <field name="living_area">10</field>
+            <field name="facades">4</field>
+            <field name="garage">False</field>
+        </record>
+
+        <!-- property_3 record: The Grand Mansion -->
+        <record id='property_3' model='estate.property'>
+            <field name='name'>The Grand Mansion</field>
+            <field name='type' ref='type_0'/>
+            <field name='state'>New</field>
+            <field name='description'> A luxorious mansion by seaside</field>
+            <field name='postcode'>20003</field>
+            <field name="date_availability">2022-12-18</field>
+            <field name="expected_price">15000000</field>
+            <field name="bedrooms">6</field>
+            <field name="living_area">1000</field>
+            <field name="facades">6</field>
+            <field name="garage">True</field>
+            <field name="garden">True</field>
+            <field name="garden_area">100</field>
+            <field name="offer_ids" eval="[
+            Command.create({
+                'partner_id': ref('base.res_partner_2'),
+                'price':14000000,
+                'validity':14
+            }),
+            Command.create({
+                'partner_id': ref('base.res_partner_2'),
+                'price':15500000,
+                'validity':14
+            })]"/>
+            <!-- since an offer is created from the instance of its property, property_id is implicitly passed -->
+            <!-- this is different than creating the invoice (RPC) -->
+        </record>
+    </data>
 </odoo>
