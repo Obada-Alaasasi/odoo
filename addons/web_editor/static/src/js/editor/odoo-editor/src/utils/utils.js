@@ -284,16 +284,17 @@ export function getFurthestUneditableParent(node, parentLimit) {
  *
  * @param {Node} node
  * @param {string} [selector=undefined]
- * @param {boolean} [restrictToEditable=false]
  * @returns {HTMLElement}
  */
 export function closestElement(node, selector) {
-    const element = node.nodeType === Node.TEXT_NODE ? node.parentElement : node;
-    if (selector && element) {
-        const elementFound = element.closest(selector);
-        return elementFound && elementFound.querySelector('.odoo-editor-editable') ? null : elementFound;
+    let element = node;
+    while (element && element.nodeType !== Node.ELEMENT_NODE) {
+        element = element.parentNode;
     }
-    return selector && element ? element.closest(selector) : element || node;
+    if (element && selector) {
+        element = element.closest(selector);
+    }
+    return element && element.querySelector('.odoo-editor-editable') ? null : element;
 }
 
 /**
@@ -1391,13 +1392,17 @@ export function containsUnremovable(node) {
 export function getInSelection(document, selector) {
     const selection = document.getSelection();
     const range = selection && !!selection.rangeCount && selection.getRangeAt(0);
-    return (
-        range &&
-        (closestElement(range.startContainer, selector) ||
-            [...closestElement(range.commonAncestorContainer).querySelectorAll(selector)].find(
+    if (range) {
+        const selectorInStartAncestors = closestElement(range.startContainer, selector);
+        if (selectorInStartAncestors) {
+            return selectorInStartAncestors;
+        } else {
+            const commonElementAncestor = closestElement(range.commonAncestorContainer);
+            return commonElementAncestor && [...commonElementAncestor.querySelectorAll(selector)].find(
                 node => range.intersectsNode(node),
-            ))
-    );
+            );
+        }
+    }
 }
 
 /**
@@ -1508,6 +1513,15 @@ export function getOuid(node, optimize = false) {
         node = node.parentNode;
     }
     return node && node.oid;
+}
+/**
+ * Returns true if the provided node can suport html content.
+ *
+ * @param {Node} node
+ * @returns {boolean}
+ */
+export function isHtmlContentSupported(node) {
+    return !closestElement(node, '[data-oe-model]:not([data-oe-field="arch"]),[data-oe-translation-id]', true);
 }
 /**
  * Returns whether the given node is a element that could be considered to be
@@ -2511,6 +2525,11 @@ export function getRangePosition(el, document, options = {}) {
         offset.left = marginLeft;
     }
 
+    if (options.parentContextRect) {
+        offset.left += options.parentContextRect.left;
+        offset.top += options.parentContextRect.top;
+    }
+
     if (
         offset.top - marginTop + offset.height + el.offsetHeight > window.innerHeight &&
         offset.top - el.offsetHeight - marginBottom > 0
@@ -2571,4 +2590,11 @@ export const rightLeafOnlyNotBlockNotEditablePath = createDOMPathGenerator(DIREC
 //------------------------------------------------------------------------------
 export function peek(arr) {
     return arr[arr.length - 1];
+}
+/**
+ * Check user OS 
+ * @returns {boolean} 
+ */
+export function isMacOS() {
+    return window.navigator.userAgent.includes('Mac');
 }

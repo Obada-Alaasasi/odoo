@@ -65,6 +65,12 @@
             return content;
         }
         /**
+         * Check if the key is already in the registry
+         */
+        contains(key) {
+            return key in this.content;
+        }
+        /**
          * Get a list of all elements in the registry
          */
         getAll() {
@@ -362,6 +368,7 @@
     const PADDING_AUTORESIZE_VERTICAL = 3;
     const PADDING_AUTORESIZE_HORIZONTAL = MIN_CELL_TEXT_MARGIN;
     const FILTER_ICON_MARGIN = 2;
+    const FILTER_ICON_EDGE_LENGTH = 17;
     // Menus
     const MENU_WIDTH = 250;
     const MENU_ITEM_HEIGHT = 28;
@@ -394,6 +401,7 @@
     const DEFAULT_GAUGE_MIDDLE_COLOR = "#f1c232";
     const DEFAULT_GAUGE_UPPER_COLOR = "#6aa84f";
     const LINE_FILL_TRANSPARENCY = 0.4;
+    const MIN_FIG_SIZE = 80;
     // session
     const DEBOUNCE_TIME = 200;
     const MESSAGE_VERSION = 1;
@@ -3029,7 +3037,6 @@
         "SET_FORMATTING",
         "CLEAR_FORMATTING",
         "SET_BORDER",
-        "SET_DECIMAL",
         /** CHART */
         "CREATE_CHART",
         "UPDATE_CHART",
@@ -4092,13 +4099,12 @@
   }
   .o-link-icon {
     float: right;
-    padding-left: 4%;
+    padding-left: 5px;
     .o-icon {
       height: 16px;
     }
   }
   .o-link-icon .o-icon {
-    padding-top: 3px;
     height: 13px;
   }
   .o-link-icon:hover {
@@ -4455,10 +4461,7 @@
         .add("HIDE_COLUMNS_ROWS", inverseHideColumnsRows)
         .add("UNHIDE_COLUMNS_ROWS", inverseUnhideColumnsRows);
     for (const cmd of coreTypes.values()) {
-        try {
-            inverseCommandRegistry.get(cmd);
-        }
-        catch (_) {
+        if (!inverseCommandRegistry.contains(cmd)) {
             inverseCommandRegistry.add(cmd, identity);
         }
     }
@@ -8185,7 +8188,7 @@
             baselineDisplay: getBaselineText(baselineCell, keyValueCell === null || keyValueCell === void 0 ? void 0 : keyValueCell.evaluated, chart.baselineMode),
             baselineArrow: getBaselineArrowDirection(baselineCell === null || baselineCell === void 0 ? void 0 : baselineCell.evaluated, keyValueCell === null || keyValueCell === void 0 ? void 0 : keyValueCell.evaluated, chart.baselineMode),
             baselineColor: getBaselineColor(baselineCell === null || baselineCell === void 0 ? void 0 : baselineCell.evaluated, chart.baselineMode, keyValueCell === null || keyValueCell === void 0 ? void 0 : keyValueCell.evaluated, chart.baselineColorUp, chart.baselineColorDown),
-            baselineDescr: _t(chart.baselineDescr || ""),
+            baselineDescr: chart.baselineDescr ? _t(chart.baselineDescr) : "",
             fontColor: chartFontColor(background),
             background,
             baselineStyle: chart.baselineMode !== "percentage" ? baselineCell === null || baselineCell === void 0 ? void 0 : baselineCell.style : undefined,
@@ -19027,7 +19030,7 @@ day_count_convention (number, default=${DEFAULT_DAY_COUNT_CONVENTION} ) ${_lt("A
                     break;
                 case "STOP_EDITION":
                     if (cmd.cancel) {
-                        this.cancelEdition();
+                        this.cancelEditionAndActivateSheet();
                         this.resetContent();
                     }
                     else {
@@ -19043,7 +19046,7 @@ day_count_convention (number, default=${DEFAULT_DAY_COUNT_CONVENTION} ) ${_lt("A
                     this.replaceSelection(cmd.text);
                     break;
                 case "SELECT_FIGURE":
-                    this.cancelEdition();
+                    this.cancelEditionAndActivateSheet();
                     this.resetContent();
                     break;
                 case "ADD_COLUMNS_ROWS":
@@ -19088,6 +19091,10 @@ day_count_convention (number, default=${DEFAULT_DAY_COUNT_CONVENTION} ) ${_lt("A
                     this.selectionEnd = this.currentContent.length;
                     break;
                 case "ACTIVATE_SHEET":
+                    if (!this.currentContent.startsWith("=")) {
+                        this.cancelEdition();
+                        this.resetContent();
+                    }
                     if (cmd.sheetIdFrom !== cmd.sheetIdTo) {
                         const { col, row } = this.getters.getNextVisibleCellPosition(cmd.sheetIdTo, 0, 0);
                         const zone = this.getters.expandZone(cmd.sheetIdTo, positionToZone({ col, row }));
@@ -19100,7 +19107,7 @@ day_count_convention (number, default=${DEFAULT_DAY_COUNT_CONVENTION} ) ${_lt("A
                     const sheetIdExists = !!this.getters.tryGetSheet(this.sheetId);
                     if (!sheetIdExists && this.mode !== "inactive") {
                         this.sheetId = this.getters.getActiveSheetId();
-                        this.cancelEdition();
+                        this.cancelEditionAndActivateSheet();
                         this.resetContent();
                         this.ui.notifyUI({
                             type: "ERROR",
@@ -19266,7 +19273,7 @@ day_count_convention (number, default=${DEFAULT_DAY_COUNT_CONVENTION} ) ${_lt("A
         stopEdition() {
             if (this.mode !== "inactive") {
                 const activeSheetId = this.getters.getActiveSheetId();
-                this.cancelEdition();
+                this.cancelEditionAndActivateSheet();
                 const { col, row } = this.getters.getMainCellPosition(this.sheetId, this.col, this.row);
                 let content = this.currentContent;
                 const didChange = this.initialContent !== content;
@@ -19304,12 +19311,11 @@ day_count_convention (number, default=${DEFAULT_DAY_COUNT_CONVENTION} ) ${_lt("A
                 this.setContent("");
             }
         }
-        cancelEdition() {
+        cancelEditionAndActivateSheet() {
             if (this.mode === "inactive") {
                 return;
             }
-            this.mode = "inactive";
-            this.selection.release(this);
+            this.cancelEdition();
             const sheetId = this.getters.getActiveSheetId();
             if (sheetId !== this.sheetId) {
                 this.dispatch("ACTIVATE_SHEET", {
@@ -19317,6 +19323,13 @@ day_count_convention (number, default=${DEFAULT_DAY_COUNT_CONVENTION} ) ${_lt("A
                     sheetIdTo: this.sheetId,
                 });
             }
+        }
+        cancelEdition() {
+            if (this.mode === "inactive") {
+                return;
+            }
+            this.mode = "inactive";
+            this.selection.release(this);
         }
         /**
          * Reset the current content to the active cell content
@@ -20425,8 +20438,8 @@ day_count_convention (number, default=${DEFAULT_DAY_COUNT_CONVENTION} ) ${_lt("A
     display: flex;
     align-items: center;
     justify-content: center;
-    width: ${ICON_EDGE_LENGTH}px;
-    height: ${ICON_EDGE_LENGTH}px;
+    width: ${FILTER_ICON_EDGE_LENGTH}px;
+    height: ${FILTER_ICON_EDGE_LENGTH}px;
 
     svg {
       path {
@@ -20465,10 +20478,10 @@ day_count_convention (number, default=${DEFAULT_DAY_COUNT_CONVENTION} ) ${_lt("A
             const rowDims = this.env.model.getters.getRowDimensionsInViewport(sheetId, position.row);
             const colDims = this.env.model.getters.getColDimensionsInViewport(sheetId, position.col);
             // TODO : change this offset when we support vertical cell align
-            const centeringOffset = (rowDims.size - ICON_EDGE_LENGTH) / 2;
+            const centeringOffset = Math.floor((rowDims.size - FILTER_ICON_EDGE_LENGTH) / 2);
             return {
-                x: colDims.end - ICON_EDGE_LENGTH + this.props.gridPosition.x - FILTER_ICON_MARGIN,
-                y: rowDims.end - ICON_EDGE_LENGTH + this.props.gridPosition.y - centeringOffset,
+                x: colDims.end - FILTER_ICON_EDGE_LENGTH + this.props.gridPosition.x - FILTER_ICON_MARGIN - 1,
+                y: rowDims.end - FILTER_ICON_EDGE_LENGTH + this.props.gridPosition.y - centeringOffset,
             };
         }
         isFilterActive(position) {
@@ -20513,7 +20526,6 @@ day_count_convention (number, default=${DEFAULT_DAY_COUNT_CONVENTION} ) ${_lt("A
     const ANCHOR_SIZE = 8;
     const BORDER_WIDTH = 1;
     const ACTIVE_BORDER_WIDTH = 2;
-    const MIN_FIG_SIZE = 80;
     css /*SCSS*/ `
   div.o-figure {
     box-sizing: content-box;
@@ -20712,7 +20724,15 @@ day_count_convention (number, default=${DEFAULT_DAY_COUNT_CONVENTION} ) ${_lt("A
         setup() {
             owl.useEffect((selectedFigureId, thisFigureId, el) => {
                 if (selectedFigureId === thisFigureId) {
-                    el === null || el === void 0 ? void 0 : el.focus();
+                    /** Scrolling on a newly inserted figure that overflows outside the viewport
+                     * will break the whole layout.
+                     * NOTE: `preventScroll`does not work on mobile but then again,
+                     * mobile is not really supported ATM.
+                     *
+                     * TODO: When implementing proper mobile, we will need to scroll the viewport
+                     * correctly (and render?) before focusing the element.
+                     */
+                    el === null || el === void 0 ? void 0 : el.focus({ preventScroll: true });
                 }
             }, () => [this.env.model.getters.getSelectedFigureId(), this.props.figure.id, this.figureRef.el]);
         }
@@ -20721,16 +20741,16 @@ day_count_convention (number, default=${DEFAULT_DAY_COUNT_CONVENTION} ) ${_lt("A
             ev.stopPropagation();
             const initialX = ev.clientX;
             const initialY = ev.clientY;
-            this.dnd.isActive = true;
             this.dnd.x = figure.x;
             this.dnd.y = figure.y;
             this.dnd.width = figure.width;
             this.dnd.height = figure.height;
             const onMouseMove = (ev) => {
-                const deltaX = dirX * (ev.clientX - initialX);
-                const deltaY = dirY * (ev.clientY - initialY);
-                this.dnd.width = Math.max(figure.width + deltaX, MIN_FIG_SIZE);
-                this.dnd.height = Math.max(figure.height + deltaY, MIN_FIG_SIZE);
+                this.dnd.isActive = true;
+                const deltaX = Math.max(dirX * (ev.clientX - initialX), MIN_FIG_SIZE - figure.width);
+                const deltaY = Math.max(dirY * (ev.clientY - initialY), MIN_FIG_SIZE - figure.height);
+                this.dnd.width = figure.width + deltaX;
+                this.dnd.height = figure.height + deltaY;
                 if (dirX < 0) {
                     this.dnd.x = figure.x - deltaX;
                 }
@@ -20776,12 +20796,12 @@ day_count_convention (number, default=${DEFAULT_DAY_COUNT_CONVENTION} ) ${_lt("A
             const { offsetX, offsetY } = this.env.model.getters.getActiveSheetScrollInfo();
             const initialX = ev.clientX - position.left;
             const initialY = ev.clientY - position.top;
-            this.dnd.isActive = true;
             this.dnd.x = figure.x;
             this.dnd.y = figure.y;
             this.dnd.width = figure.width;
             this.dnd.height = figure.height;
             const onMouseMove = (ev) => {
+                this.dnd.isActive = true;
                 const newX = ev.clientX - position.left;
                 let deltaX = newX - initialX;
                 if (newX > offsetCorrectionX && initialX < offsetCorrectionX) {
@@ -21962,6 +21982,7 @@ day_count_convention (number, default=${DEFAULT_DAY_COUNT_CONVENTION} ) ${_lt("A
             return {
                 left: `${this.props.position.left + x}px`,
                 bottom: "0px",
+                height: `${SCROLLBAR_WIDTH$1}px`,
                 right: `${SCROLLBAR_WIDTH$1}px`,
             };
         }
@@ -22003,6 +22024,7 @@ day_count_convention (number, default=${DEFAULT_DAY_COUNT_CONVENTION} ) ${_lt("A
             return {
                 top: `${this.props.position.top + y}px`,
                 right: "0px",
+                width: `${SCROLLBAR_WIDTH$1}px`,
                 bottom: `${SCROLLBAR_WIDTH$1}px`,
             };
         }
@@ -22193,7 +22215,8 @@ day_count_convention (number, default=${DEFAULT_DAY_COUNT_CONVENTION} ) ${_lt("A
             this.focus();
         }
         focus() {
-            if (!this.env.model.getters.getSelectedFigureId()) {
+            if (!this.env.model.getters.getSelectedFigureId() &&
+                this.env.model.getters.getEditionMode() === "inactive") {
                 this.hiddenInput.el.focus();
             }
         }
@@ -22356,6 +22379,21 @@ day_count_convention (number, default=${DEFAULT_DAY_COUNT_CONVENTION} ) ${_lt("A
         // ---------------------------------------------------------------------------
         // Context Menu
         // ---------------------------------------------------------------------------
+        onInputContextMenu(ev) {
+            ev.preventDefault();
+            const lastZone = this.env.model.getters.getSelectedZone();
+            const { left: col, top: row } = lastZone;
+            let type = "CELL";
+            this.env.model.dispatch("STOP_EDITION");
+            if (this.env.model.getters.getActiveCols().has(col)) {
+                type = "COL";
+            }
+            else if (this.env.model.getters.getActiveRows().has(row)) {
+                type = "ROW";
+            }
+            const { x, y, width, height } = this.env.model.getters.getVisibleRect(lastZone);
+            this.toggleContextMenu(type, x + width, y + height);
+        }
         onCellRightClicked(col, row, { x, y }) {
             const zones = this.env.model.getters.getSelectedZones();
             const lastZone = zones[zones.length - 1];
@@ -26343,7 +26381,8 @@ day_count_convention (number, default=${DEFAULT_DAY_COUNT_CONVENTION} ) ${_lt("A
      */
     function repairInitialMessages(data, initialMessages) {
         initialMessages = fixTranslatedSheetIds(data, initialMessages);
-        initialMessages = dropSortCommands(data, initialMessages);
+        initialMessages = dropCommands(initialMessages, "SORT_CELLS");
+        initialMessages = dropCommands(initialMessages, "SET_DECIMAL");
         return initialMessages;
     }
     /**
@@ -26381,14 +26420,13 @@ day_count_convention (number, default=${DEFAULT_DAY_COUNT_CONVENTION} ) ${_lt("A
         }
         return messages;
     }
-    function dropSortCommands(data, initialMessages) {
+    function dropCommands(initialMessages, commandType) {
         const messages = [];
         for (const message of initialMessages) {
             if (message.type === "REMOTE_REVISION") {
                 messages.push({
                     ...message,
-                    // @ts-ignore
-                    commands: message.commands.filter((command) => command.type !== "SORT_CELLS"),
+                    commands: message.commands.filter((command) => command.type !== commandType),
                 });
             }
             else {
@@ -33515,7 +33553,7 @@ day_count_convention (number, default=${DEFAULT_DAY_COUNT_CONVENTION} ) ${_lt("A
             }
             /** Filter Header */
             box.isFilterHeader = this.getters.isFilterHeader(sheetId, col, row);
-            const headerIconWidth = box.isFilterHeader ? ICON_EDGE_LENGTH + FILTER_ICON_MARGIN : 0;
+            const headerIconWidth = box.isFilterHeader ? FILTER_ICON_EDGE_LENGTH + FILTER_ICON_MARGIN : 0;
             /** Content */
             const text = this.getters.getCellText(cell, showFormula);
             const textWidth = this.getters.getTextWidth(cell);
@@ -34724,6 +34762,7 @@ day_count_convention (number, default=${DEFAULT_DAY_COUNT_CONVENTION} ) ${_lt("A
             this.clientId = "local";
             this.pendingMessages = [];
             this.waitingAck = false;
+            this.isReplayingInitialRevisions = false;
             this.processedRevisions = new Set();
             this.uuidGenerator = new UuidGenerator();
             this.debouncedMove = debounce(this._move.bind(this), DEBOUNCE_TIME);
@@ -34783,6 +34822,7 @@ day_count_convention (number, default=${DEFAULT_DAY_COUNT_CONVENTION} ) ${_lt("A
             this.transportService.onNewMessage(this.clientId, this.onMessageReceived.bind(this));
         }
         loadInitialMessages(messages) {
+            this.isReplayingInitialRevisions = true;
             this.on("unexpected-revision-id", this, ({ revisionId }) => {
                 throw new Error(`The spreadsheet could not be loaded. Revision ${revisionId} is corrupted.`);
             });
@@ -34790,6 +34830,7 @@ day_count_convention (number, default=${DEFAULT_DAY_COUNT_CONVENTION} ) ${_lt("A
                 this.onMessageReceived(message);
             }
             this.off("unexpected-revision-id", this);
+            this.isReplayingInitialRevisions = false;
         }
         /**
          * Notify the server that the user client left the collaborative session
@@ -34977,6 +35018,10 @@ day_count_convention (number, default=${DEFAULT_DAY_COUNT_CONVENTION} ) ${_lt("A
                     clientId: revision.clientId,
                     commands: revision.commands,
                 };
+            }
+            if (this.isReplayingInitialRevisions) {
+                throw new Error(`Trying to send a new revision while replaying initial revision. This can lead to endless dispatches every time the spreadsheet is open.
+      ${JSON.stringify(message)}`);
             }
             this.transportService.sendMessage({
                 ...message,
@@ -36904,14 +36949,6 @@ day_count_convention (number, default=${DEFAULT_DAY_COUNT_CONVENTION} ) ${_lt("A
                 offsetX: offsetScrollbarX + deltaX,
                 offsetY: offsetScrollbarY + deltaY,
             });
-        }
-        copy(ev) {
-            this.env.model.dispatch("COPY");
-            const content = this.env.model.getters.getClipboardContent();
-            // TODO use env.clipboard
-            // TODO add a test
-            ev.clipboardData.setData("text/plain", content);
-            ev.preventDefault();
         }
     }
     SpreadsheetDashboard.template = "o-spreadsheet-SpreadsheetDashboard";
@@ -41667,7 +41704,10 @@ day_count_convention (number, default=${DEFAULT_DAY_COUNT_CONVENTION} ) ${_lt("A
                     case 3 /* Status.Finalizing */:
                         throw new Error("Cannot dispatch commands in the finalize state");
                     case 2 /* Status.RunningCore */:
-                        throw new Error("A UI plugin cannot dispatch while handling a core command");
+                        if (isCoreCommand(command)) {
+                            throw new Error(`A UI plugin cannot dispatch ${type} while handling a core command`);
+                        }
+                        this.dispatchToHandlers(this.handlers, command);
                 }
                 return DispatchResult.Success;
             };
@@ -41789,7 +41829,10 @@ day_count_convention (number, default=${DEFAULT_DAY_COUNT_CONVENTION} ) ${_lt("A
         }
         onRemoteRevisionReceived({ commands }) {
             for (let command of commands) {
+                const previousStatus = this.status;
+                this.status = 2 /* Status.RunningCore */;
                 this.dispatchToHandlers(this.uiPlugins, command);
+                this.status = previousStatus;
             }
             this.finalize();
         }
@@ -41991,6 +42034,7 @@ day_count_convention (number, default=${DEFAULT_DAY_COUNT_CONVENTION} ) ${_lt("A
         parseMarkdownLink,
         markdownLink,
         createEmptyWorkbookData,
+        createEmptySheet,
         getDefaultChartJsRuntime,
         chartFontColor,
         getMenuChildren,
@@ -42055,8 +42099,8 @@ day_count_convention (number, default=${DEFAULT_DAY_COUNT_CONVENTION} ) ${_lt("A
     Object.defineProperty(exports, '__esModule', { value: true });
 
     exports.__info__.version = '2.0.0';
-    exports.__info__.date = '2022-11-25T14:49:18.608Z';
-    exports.__info__.hash = 'f83585f';
+    exports.__info__.date = '2022-12-20T11:00:11.862Z';
+    exports.__info__.hash = '0eaf65e';
 
 })(this.o_spreadsheet = this.o_spreadsheet || {}, owl);
 //# sourceMappingURL=o_spreadsheet.js.map
