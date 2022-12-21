@@ -1,0 +1,33 @@
+<odoo>
+    <data>
+        <!-- record of first offer of property_1: Big Villa -->
+        <record id="property_1_offer_1" model="estate.property.offer">
+            <field name="property_id" ref="property_1"/>
+            <field name="partner_id" ref="base.res_partner_12"/>
+            <field name="price">10000</field>
+            <field name='validity'>14</field> 
+        </record>
+
+        <!-- record of second offer of property_1: Big Villa -->
+        <record id="property_1_offer_2" model="estate.property.offer">
+            <field name="property_id" ref="property_1"/>
+            <field name="partner_id" ref="base.res_partner_12"/>
+            <field name="price">1500000</field>
+            <field name="validity">14</field>
+        </record>
+
+        <!-- record of third offer of property_1: Big Villa -->
+        <record id="property_1_offer_3" model="estate.property.offer">
+            <field name="property_id" ref="property_1"/>
+            <field name="partner_id" ref="base.res_partner_2"/>
+            <field name="price">1500001</field>
+            <field name="validity">14</field>
+        </record>
+
+        <!-- refuse the first two offers and accept the third -->
+        <!-- NOTE: DO NOT add an id to function -->
+        <function model='estate.property.offer' name='refuse_offer' eval="[ref('property_1_offer_1')]"/>
+        <function model='estate.property.offer' name='refuse_offer' eval="[ref('property_1_offer_2')]"/>  
+        <function model='estate.property.offer' name='accept_offer' eval="[ref('property_1_offer_3')]"/> 
+    </data>
+</odoo>

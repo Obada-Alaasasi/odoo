@@ -1,0 +1,29 @@
+<odoo>
+    <menuitem 
+        id="estate_menu_root" 
+        name = 'Real Estate'
+        sequence = "25">
+        <menuitem 
+            id="estate_Advertisements_menu" 
+            name = 'Advertisements'>
+            <menuitem 
+                id="estate_Properties_menu" 
+                name = 'Properties'
+                action = 'estate_property_action'/>
+        </menuitem>
+        <menuitem
+            id="estate_Settings_menu"
+            name="Settings"
+            groups="group_estate_manager">
+            <menuitem
+                id="estate_type_menu"
+                name="Property Type"
+                action="property_type_action"/>
+                
+            <menuitem   
+                id="estate_tag_menu"
+                name="Property Tags"
+                action="property_tag_action"/>
+        </menuitem> 
+    </menuitem>
+</odoo>
